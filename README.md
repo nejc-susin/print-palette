@@ -60,6 +60,15 @@ https://example.com/#v=1&p=10100,10200
 
 ## Deployment
 
-Run `npm run build`, then copy the contents of `dist/` to your web server's document root.
+Copy the generic configuration template and fill in your own server details:
+
+```bash
+cp deploy.env.example .env.deploy
+npm run deploy
+```
+
+`.env.deploy` is ignored by Git. It contains the SSH host, user, destination path, port, and optional public URL. The deploy command builds the site and uploads `dist/` with `rsync`.
+
+The committed template contains placeholders only. Keep actual domains, usernames, server addresses, and filesystem paths in `.env.deploy`.
 
 Hashed files under `assets/` may be cached long-term. Keep `index.html` and `data/inventory.json` uncached or on a short cache so inventory updates appear promptly.
