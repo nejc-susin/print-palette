@@ -19,15 +19,17 @@ interface CatalogData {
 
 interface InventoryData {
   availableColorIds: string[];
+  openedColorIds?: string[];
 }
 
-type ViewMode = "available" | "all";
+type ViewMode = "available" | "opened" | "all";
 
 const app = document.querySelector<HTMLDivElement>("#app");
 if (!app) throw new Error("App root not found");
 
 let catalog: Filament[] = [];
 let availableIds = new Set<string>();
+let openedIds = new Set<string>();
 let selectedIds: string[] = [];
 let urlTokenToId = new Map<string, string>();
 let idToUrlToken = new Map<string, string>();
@@ -59,6 +61,7 @@ app.innerHTML = `
         <p class="hero-copy">Browse the filament I have on hand, collect the colors you like, and send me one simple link.</p>
         <div class="hero-facts" aria-label="Catalog summary">
           <span><strong id="available-total">—</strong> colors on hand</span>
+          <span><strong id="opened-total">—</strong> already opened</span>
           <span><strong>2</strong> finishes</span>
         </div>
       </div>
@@ -80,12 +83,15 @@ app.innerHTML = `
             <span class="filter-label">Show</span>
             <div class="segmented-control">
               <button type="button" data-view="available" aria-pressed="true">On hand</button>
+              <button type="button" data-view="opened" aria-pressed="false">Opened</button>
               <button type="button" data-view="all" aria-pressed="false">Full catalog</button>
             </div>
           </div>
           <label class="select-field"><span>Finish</span><select id="type-filter"><option>All</option><option>Basic</option><option>Matte</option></select></label>
           <label class="select-field"><span>Color family</span><select id="family-filter"><option>All</option></select></label>
         </div>
+
+        <p class="spool-note"><strong>Opened or sealed?</strong> Both are fine to pick. For small prints under about 100&nbsp;g, an opened spool is ideal. For bigger prints, I’m happy to open a new color.</p>
 
         <div class="result-line" aria-live="polite">
           <strong id="result-count">Loading colors…</strong>
@@ -144,19 +150,28 @@ function filamentById(id: string): Filament | undefined {
   return catalog.find((filament) => filament.id === id);
 }
 
+function stockStatus(id: string): { key: "opened" | "sealed" | "unavailable"; label: string } {
+  if (openedIds.has(id)) return { key: "opened", label: "Opened" };
+  if (availableIds.has(id)) return { key: "sealed", label: "Sealed" };
+  return { key: "unavailable", label: "Not on hand" };
+}
+
 function renderGallery(): void {
   const query = searchTerm.trim().toLowerCase();
   const filtered = catalog.filter((filament) => {
     if (viewMode === "available" && !availableIds.has(filament.id)) return false;
+    if (viewMode === "opened" && !openedIds.has(filament.id)) return false;
     if (typeFilter !== "All" && filament.type !== typeFilter) return false;
     if (familyFilter !== "All" && filament.family !== familyFilter) return false;
     return !query || `${filament.name} ${filament.type} ${filament.family}`.toLowerCase().includes(query);
   });
 
   requireElement<HTMLElement>("#result-count").textContent = `${filtered.length} ${filtered.length === 1 ? "color" : "colors"}`;
-  requireElement<HTMLElement>("#view-description").textContent = viewMode === "available"
-    ? "Showing filament currently on hand"
-    : `Showing all ${catalog.length} Basic and Matte colors`;
+  requireElement<HTMLElement>("#view-description").textContent = {
+    available: "Showing filament currently on hand",
+    opened: "Showing spools that are already open",
+    all: `Showing all ${catalog.length} Basic and Matte colors`,
+  }[viewMode];
 
   if (filtered.length === 0) {
     gallery.innerHTML = `<div class="empty-gallery"><strong>No colors match those filters.</strong><span>Try a different search or show the full catalog.</span></div>`;
@@ -166,6 +181,7 @@ function renderGallery(): void {
 
   gallery.innerHTML = filtered.map((filament) => {
     const isAvailable = availableIds.has(filament.id);
+    const stock = stockStatus(filament.id);
     const selectedIndex = selectedIds.indexOf(filament.id);
     const isSelected = selectedIndex >= 0;
     const atLimit = selectedIds.length >= MAX_PICKS && !isSelected;
@@ -181,7 +197,7 @@ function renderGallery(): void {
         <div class="card-copy">
           <h3>${escapeHtml(filament.name)}</h3>
           <span class="color-id">Bambu color ID ${escapeHtml(filament.colorId)}</span>
-          ${viewMode === "all" ? `<span class="stock-label ${isAvailable ? "is-available" : "is-unavailable"}">${isAvailable ? "Available" : "Not on hand"}</span>` : ""}
+          <span class="stock-label is-${stock.key}">${stock.label}</span>
           <button type="button" data-action="toggle-pick" data-id="${escapeHtml(filament.id)}" ${!isAvailable || atLimit ? "disabled" : ""} aria-label="${escapeHtml(buttonLabel)}: ${escapeHtml(filament.name)}">
             ${buttonLabel}<span aria-hidden="true">${isSelected ? "−" : "+"}</span>
           </button>
@@ -209,7 +225,7 @@ function renderPicks(): void {
           <li class="pick-item${availableIds.has(filament.id) ? "" : " is-unavailable"}">
             <span class="pick-index">${index + 1}</span>
             <span class="pick-swatch" style="--swatch:${filament.hex}"></span>
-            <span class="pick-name"><strong>${escapeHtml(filament.name)}</strong><small>PLA ${filament.type}${availableIds.has(filament.id) ? "" : " · Not on hand"}</small></span>
+            <span class="pick-name"><strong>${escapeHtml(filament.name)}</strong><small>PLA ${filament.type} · ${stockStatus(filament.id).label}</small></span>
             <span class="pick-actions">
               <button type="button" data-action="move-up" data-id="${filament.id}" ${index === 0 ? "disabled" : ""} aria-label="Move ${escapeHtml(filament.name)} up">↑</button>
               <button type="button" data-action="move-down" data-id="${filament.id}" ${index === selected.length - 1 ? "disabled" : ""} aria-label="Move ${escapeHtml(filament.name)} down">↓</button>
@@ -379,12 +395,15 @@ async function loadData(): Promise<void> {
 
     catalog = catalogData.filaments;
     const availableColorIds = new Set(inventoryData.availableColorIds);
+    const openedColorIds = new Set(Array.isArray(inventoryData.openedColorIds) ? inventoryData.openedColorIds : []);
     availableIds = new Set(catalog.filter((filament) => availableColorIds.has(filament.colorId)).map((filament) => filament.id));
+    openedIds = new Set(catalog.filter((filament) => availableIds.has(filament.id) && openedColorIds.has(filament.colorId)).map((filament) => filament.id));
     urlTokenToId = new Map(catalog.map((filament) => [filament.colorId, filament.id]));
     idToUrlToken = new Map(catalog.map((filament) => [filament.id, filament.colorId]));
     selectedIds = parseSelection(window.location.hash, urlTokenToId);
 
     requireElement<HTMLElement>("#available-total").textContent = String(availableIds.size);
+    requireElement<HTMLElement>("#opened-total").textContent = String(openedIds.size);
     const families = [...new Set(catalog.map((filament) => filament.family))];
     requireElement<HTMLSelectElement>("#family-filter").insertAdjacentHTML("beforeend", families.map((family) => `<option>${escapeHtml(family)}</option>`).join(""));
     syncUrl();

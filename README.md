@@ -5,7 +5,8 @@ Print Palette is a small static site where friends can browse available Bambu La
 ## Features
 
 - Bambu Lab PLA Basic and PLA Matte catalog
-- Available-only and full-catalog views
+- On-hand, opened-only, and full-catalog views
+- Opened/sealed marker on every on-hand color
 - Search, finish, and color-family filters
 - Reorderable color selection
 - Short, database-free share links using Bambu color IDs
@@ -33,18 +34,19 @@ npm run preview
 ## Data
 
 - `public/data/catalog.json` contains the public filament catalog, swatches, names, finishes, and Bambu color IDs.
-- `public/data/inventory.json` contains only the Bambu color IDs currently available.
+- `public/data/inventory.json` contains the Bambu color IDs currently available and, of those, the IDs with at least one opened spool.
 
-To update availability, edit `availableColorIds`:
+To update stock, edit `availableColorIds` and `openedColorIds`. Both come from the `filament` tab of the private 3D printing spreadsheet: a color is available when any PLA Basic/Matte row for it is not `Depleted`, and opened when any of those rows has status `Open`.
 
 ```json
 {
-  "schemaVersion": 2,
-  "availableColorIds": ["10100", "10200", "11603"]
+  "schemaVersion": 3,
+  "availableColorIds": ["10100", "10200", "11603"],
+  "openedColorIds": ["10100"]
 }
 ```
 
-Everything under `public/` is visible to visitors. Do not add quantities, opened/sealed state, prices, or private spreadsheet columns.
+Everything under `public/` is visible to visitors. Do not add quantities, prices, stores, or other private spreadsheet columns.
 
 The original inventory labels `White` and `Charcoal Black` map to the catalog names `Jade White` and `Charcoal`. Duplicate inventory rows are intentionally collapsed to binary availability.
 

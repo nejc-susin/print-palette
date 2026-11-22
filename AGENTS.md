@@ -11,12 +11,13 @@ Static filament picker. Friends choose up to eight colors and share the ordered 
 - My Picks is a flat, reorderable list of up to eight unique colors.
 - Shared links use `#v=1&p=10100,10200`; order is preserved.
 - Ignore malformed, duplicate, and unknown IDs safely. No pre-release link compatibility is required.
-- Public data exposes only binary availability—never quantity, condition, price, or purchase data.
+- Each on-hand card shows whether that color is opened or sealed, and the Show filter has an opened-only view. A short note says both are fine to pick, with opened spools preferred for prints under about 100 g.
+- Public data exposes only binary availability and binary opened state per color—never quantity, price, or purchase data.
 
 ## Data
 
 - `public/data/catalog.json`: complete public Basic and Matte catalog.
-- `public/data/inventory.json`: currently available Bambu IDs in `availableColorIds`.
+- `public/data/inventory.json`: currently available Bambu IDs in `availableColorIds`; the opened subset in `openedColorIds`.
 - Keep private spreadsheet data out of the site and production build.
 
 ## Implementation

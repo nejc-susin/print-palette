@@ -22,10 +22,17 @@ test("inventory contains 30 unique known Bambu color IDs", () => {
   assert.ok(inventory.availableColorIds.every((id) => catalogColorIds.has(id)));
 });
 
-test("public inventory exposes availability only", () => {
-  assert.deepEqual(Object.keys(inventory).sort(), ["availableColorIds", "schemaVersion"]);
+test("opened colors are 12 unique IDs that are also available", () => {
+  const available = new Set(inventory.availableColorIds);
+  assert.equal(inventory.openedColorIds.length, 12);
+  assert.equal(new Set(inventory.openedColorIds).size, 12);
+  assert.ok(inventory.openedColorIds.every((id) => available.has(id)));
+});
+
+test("public inventory exposes availability and opened state only", () => {
+  assert.deepEqual(Object.keys(inventory).sort(), ["availableColorIds", "openedColorIds", "schemaVersion"]);
   const serialized = JSON.stringify(inventory).toLowerCase();
-  for (const privateField of ["price", "quantity", "opened", "sealed", "code"]) {
+  for (const privateField of ["price", "quantity", "cost", "store", "code"]) {
     assert.equal(serialized.includes(privateField), false);
   }
 });
