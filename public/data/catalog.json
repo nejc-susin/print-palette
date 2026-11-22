@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "brand": "Bambu Lab",
-  "scope": ["PLA Basic", "PLA Matte"],
+  "scope": ["PLA Basic", "PLA Matte", "PETG HF", "PETG Translucent"],
   "filaments": [
     { "id": "pla-basic-jade-white", "colorId": "10100", "material": "PLA", "type": "Basic", "name": "Jade White", "hex": "#FFFFFF", "family": "Neutral" },
     { "id": "pla-basic-beige", "colorId": "10201", "material": "PLA", "type": "Basic", "name": "Beige", "hex": "#F7E6DE", "family": "Neutral" },
@@ -33,7 +33,6 @@
     { "id": "pla-basic-blue-grey", "colorId": "10602", "material": "PLA", "type": "Basic", "name": "Blue Grey", "hex": "#5B6579", "family": "Neutral" },
     { "id": "pla-basic-dark-gray", "colorId": "10105", "material": "PLA", "type": "Basic", "name": "Dark Gray", "hex": "#545454", "family": "Neutral" },
     { "id": "pla-basic-black", "colorId": "10101", "material": "PLA", "type": "Basic", "name": "Black", "hex": "#000000", "family": "Neutral" },
-
     { "id": "pla-matte-ivory-white", "colorId": "11100", "material": "PLA", "type": "Matte", "name": "Ivory White", "hex": "#FFFFFF", "family": "Neutral" },
     { "id": "pla-matte-bone-white", "colorId": "11103", "material": "PLA", "type": "Matte", "name": "Bone White", "hex": "#CBC6B8", "family": "Neutral" },
     { "id": "pla-matte-desert-tan", "colorId": "11401", "material": "PLA", "type": "Matte", "name": "Desert Tan", "hex": "#E8DBB7", "family": "Brown & earth" },
@@ -58,6 +57,29 @@
     { "id": "pla-matte-dark-blue", "colorId": "11602", "material": "PLA", "type": "Matte", "name": "Dark Blue", "hex": "#042F56", "family": "Blue" },
     { "id": "pla-matte-ash-gray", "colorId": "11102", "material": "PLA", "type": "Matte", "name": "Ash Gray", "hex": "#9B9EA0", "family": "Neutral" },
     { "id": "pla-matte-nardo-gray", "colorId": "11104", "material": "PLA", "type": "Matte", "name": "Nardo Gray", "hex": "#757575", "family": "Neutral" },
-    { "id": "pla-matte-charcoal", "colorId": "11101", "material": "PLA", "type": "Matte", "name": "Charcoal", "hex": "#000000", "family": "Neutral" }
+    { "id": "pla-matte-charcoal", "colorId": "11101", "material": "PLA", "type": "Matte", "name": "Charcoal", "hex": "#000000", "family": "Neutral" },
+    { "id": "petg-hf-white", "colorId": "33100", "material": "PETG", "type": "HF", "name": "White", "hex": "#FFFFFF", "family": "Neutral" },
+    { "id": "petg-hf-cream", "colorId": "33401", "material": "PETG", "type": "HF", "name": "Cream", "hex": "#F9DFB9", "family": "Neutral" },
+    { "id": "petg-hf-gray", "colorId": "33101", "material": "PETG", "type": "HF", "name": "Gray", "hex": "#ADB1B2", "family": "Neutral" },
+    { "id": "petg-hf-dark-gray", "colorId": "33103", "material": "PETG", "type": "HF", "name": "Dark Gray", "hex": "#515151", "family": "Neutral" },
+    { "id": "petg-hf-black", "colorId": "33102", "material": "PETG", "type": "HF", "name": "Black", "hex": "#000000", "family": "Neutral" },
+    { "id": "petg-hf-yellow", "colorId": "33400", "material": "PETG", "type": "HF", "name": "Yellow", "hex": "#FFD00B", "family": "Orange & yellow" },
+    { "id": "petg-hf-orange", "colorId": "33300", "material": "PETG", "type": "HF", "name": "Orange", "hex": "#F75403", "family": "Orange & yellow" },
+    { "id": "petg-hf-red", "colorId": "33200", "material": "PETG", "type": "HF", "name": "Red", "hex": "#BC0900", "family": "Red & pink" },
+    { "id": "petg-hf-peanut-brown", "colorId": "33801", "material": "PETG", "type": "HF", "name": "Peanut Brown", "hex": "#875718", "family": "Brown & earth" },
+    { "id": "petg-hf-lime-green", "colorId": "33501", "material": "PETG", "type": "HF", "name": "Lime Green", "hex": "#6EE53C", "family": "Green" },
+    { "id": "petg-hf-green", "colorId": "33500", "material": "PETG", "type": "HF", "name": "Green", "hex": "#00AE42", "family": "Green" },
+    { "id": "petg-hf-forest-green", "colorId": "33502", "material": "PETG", "type": "HF", "name": "Forest Green", "hex": "#39541A", "family": "Green" },
+    { "id": "petg-hf-lake-blue", "colorId": "33601", "material": "PETG", "type": "HF", "name": "Lake Blue", "hex": "#1F79E5", "family": "Blue" },
+    { "id": "petg-hf-blue", "colorId": "33600", "material": "PETG", "type": "HF", "name": "Blue", "hex": "#002E96", "family": "Blue" },
+    { "id": "petg-translucent-clear", "colorId": "32101", "material": "PETG", "type": "Translucent", "name": "Clear", "hex": "#000000", "family": "Neutral", "opacity": 0 },
+    { "id": "petg-translucent-gray", "colorId": "32100", "material": "PETG", "type": "Translucent", "name": "Translucent Gray", "hex": "#8E8E8E", "family": "Neutral", "opacity": 0.5 },
+    { "id": "petg-translucent-pink", "colorId": "32200", "material": "PETG", "type": "Translucent", "name": "Translucent Pink", "hex": "#F9C1BD", "family": "Red & pink", "opacity": 0.5 },
+    { "id": "petg-translucent-orange", "colorId": "32300", "material": "PETG", "type": "Translucent", "name": "Translucent Orange", "hex": "#FF911A", "family": "Orange & yellow", "opacity": 0.5 },
+    { "id": "petg-translucent-brown", "colorId": "32800", "material": "PETG", "type": "Translucent", "name": "Translucent Brown", "hex": "#C9A381", "family": "Brown & earth", "opacity": 0.5 },
+    { "id": "petg-translucent-olive", "colorId": "32500", "material": "PETG", "type": "Translucent", "name": "Translucent Olive", "hex": "#748C45", "family": "Green", "opacity": 0.5 },
+    { "id": "petg-translucent-teal", "colorId": "32501", "material": "PETG", "type": "Translucent", "name": "Translucent Teal", "hex": "#77EDD7", "family": "Blue", "opacity": 0.5 },
+    { "id": "petg-translucent-light-blue", "colorId": "32600", "material": "PETG", "type": "Translucent", "name": "Translucent Light Blue", "hex": "#61B0FF", "family": "Blue", "opacity": 0.5 },
+    { "id": "petg-translucent-purple", "colorId": "32700", "material": "PETG", "type": "Translucent", "name": "Translucent Purple", "hex": "#D6ABFF", "family": "Purple", "opacity": 0.5 }
   ]
 }

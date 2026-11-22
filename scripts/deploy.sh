@@ -31,6 +31,11 @@ fi
 deploy_port="${DEPLOY_PORT:-22}"
 
 cd "${project_dir}"
+if [[ "${SKIP_INVENTORY_SYNC:-}" == "1" ]]; then
+  echo "Skipping inventory sync; deploying public/data/inventory.json as it is."
+else
+  node scripts/sync-inventory.mjs
+fi
 npm run build
 
 destination="${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH%/}/"

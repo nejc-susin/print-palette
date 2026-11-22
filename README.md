@@ -4,10 +4,10 @@ Print Palette is a small static site where friends can browse available Bambu La
 
 ## Features
 
-- Bambu Lab PLA Basic and PLA Matte catalog
+- Bambu Lab PLA Basic, PLA Matte, PETG HF, and PETG Translucent catalog
 - On-hand, opened-only, and full-catalog views
-- Opened marker on colors with an opened spool
-- Search and finish filters
+- Opened/sealed marker on every on-hand color
+- Search and material filters
 - Reorderable color selection
 - Short, database-free share links using Bambu color IDs
 - Responsive mobile and desktop layout
@@ -33,10 +33,12 @@ npm run preview
 
 ## Data
 
-- `public/data/catalog.json` contains the public filament catalog, swatches, names, finishes, and Bambu color IDs.
+- `public/data/catalog.json` contains the public filament catalog, swatches, names, materials, and Bambu color IDs. Names and hex values come from Bambu Studio's `filaments_color_codes.json`. Translucent colors also carry an `opacity` (Clear is `0`).
 - `public/data/inventory.json` contains the Bambu color IDs currently available and, of those, the IDs with at least one opened spool.
 
-To update stock, edit `availableColorIds` and `openedColorIds`. Both come from the `filament` tab of the private 3D printing spreadsheet: a color is available when any PLA Basic/Matte row for it is not `Depleted`, and opened when any of those rows has status `Open`.
+Stock comes from the private 3D printing spreadsheet. Its `site` tab uses formulas over the `filament` tab and exposes only `colorId,onHand,opened`: a color is on hand when any dated row for it is not `Depleted`, and opened when any dated row has status `Open`. Only the `site` tab is published to the web as CSV; never publish the whole document.
+
+`npm run deploy` runs `npm run sync` first, which downloads that CSV and rewrites `inventory.json`. Set `INVENTORY_CSV_URL` in `.env.deploy`. IDs that are not in the catalog, such as ABS, are ignored. To deploy without syncing, run `SKIP_INVENTORY_SYNC=1 npm run deploy`.
 
 ```json
 {

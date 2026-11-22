@@ -1,16 +1,16 @@
 import "./styles.css";
 import { MAX_PICKS, parseSelection, serializeSelection } from "./share.js";
 
-type FilamentType = "Basic" | "Matte";
-
 interface Filament {
   id: string;
   colorId: string;
-  material: "PLA";
-  type: FilamentType;
+  material: "PLA" | "PETG";
+  type: "Basic" | "Matte" | "HF" | "Translucent";
   name: string;
   hex: string;
   family: string;
+  /** Translucent filament only: 0 is fully clear, 1 would be opaque. */
+  opacity?: number;
 }
 
 interface CatalogData {
@@ -34,13 +34,45 @@ let selectedIds: string[] = [];
 let urlTokenToId = new Map<string, string>();
 let idToUrlToken = new Map<string, string>();
 let viewMode: ViewMode = "available";
-let typeFilter = "All";
+let lineFilter = "All";
 let searchTerm = "";
 let panelOpen = false;
 let toastTimer = 0;
 let previousFocus: HTMLElement | null = null;
 
 const mobileLayout = window.matchMedia("(max-width: 1023px)");
+
+/** Plain-language guide for people who don't print. `line` must match lineName(). */
+const MATERIAL_GUIDE = [
+  {
+    line: "PLA Basic",
+    tagline: "The everyday choice",
+    body: "Smooth, slightly shiny, crisp detail, and the most colors.",
+    bestFor: "decorations, figurines, gifts, desk items",
+    watchOut: "Softens around 55 °C, so not for hot cars, dishwashers, or a summer outdoors.",
+  },
+  {
+    line: "PLA Matte",
+    tagline: "PLA with a soft, non-shiny finish",
+    body: "Hides layer lines and looks a little more premium.",
+    bestFor: "display pieces, models, signs, anything you mostly look at",
+    watchOut: "Same heat limit as PLA Basic, and a bit more brittle.",
+  },
+  {
+    line: "PETG HF",
+    tagline: "The tough, practical one",
+    body: "Stronger, bends a little instead of snapping, and copes with heat (around 70 °C), water and sun. HF just means it prints faster.",
+    bestFor: "hooks, clips, holders, car and outdoor parts",
+    watchOut: "Slightly glossy, with fewer colors to choose from.",
+  },
+  {
+    line: "PETG Translucent",
+    tagline: "Lets light through",
+    body: "Tinted and frosted rather than glass-clear; even Clear prints look hazy. As tough as PETG HF.",
+    bestFor: "lamp shades, light diffusers, night lights, decorative vases",
+    watchOut: "Fine details and text are harder to see.",
+  },
+];
 
 app.innerHTML = `
   <div class="page-shell">
@@ -61,7 +93,7 @@ app.innerHTML = `
         <div class="hero-facts" aria-label="Catalog summary">
           <span><strong id="available-total">—</strong> colors on hand</span>
           <span><strong id="opened-total">—</strong> already opened</span>
-          <span><strong>2</strong> finishes</span>
+          <span><strong id="line-total">—</strong> filament types</span>
         </div>
       </div>
     </header>
@@ -81,8 +113,24 @@ app.innerHTML = `
               <button type="button" data-view="all" aria-pressed="false">Full catalog</button>
             </div>
           </div>
-          <label class="select-field"><span>Finish</span><select id="type-filter"><option>All</option><option>Basic</option><option>Matte</option></select></label>
+          <label class="select-field"><span>Material</span><select id="line-filter"><option>All</option></select></label>
         </div>
+
+        <details class="material-guide">
+          <summary>Which material should I pick?</summary>
+          <div class="guide-grid">
+            ${MATERIAL_GUIDE.map((entry) => `
+              <section class="guide-card">
+                <h3>${entry.line}</h3>
+                <p class="guide-tagline">${entry.tagline}</p>
+                <p>${entry.body}</p>
+                <p><strong>Best for:</strong> ${entry.bestFor}.</p>
+                <p class="guide-watch">${entry.watchOut}</p>
+                <button type="button" data-action="show-line" data-line="${entry.line}">Show ${entry.line} colors</button>
+              </section>`).join("")}
+          </div>
+          <p class="guide-footnote">Not sure? Pick the colors you like and tell me what the print is for. I’ll say if another material would suit it better. None of these are food-safe as printed, so skip cups and plates.</p>
+        </details>
 
         <div class="result-line" aria-live="polite">
           <strong id="result-count">Loading colors…</strong>
@@ -129,10 +177,29 @@ function escapeHtml(value: string): string {
   })[character] ?? character);
 }
 
-function readableInk(hex: string): "#171816" | "#ffffff" {
-  const rgb = [1, 3, 5].map((start) => Number.parseInt(hex.slice(start, start + 2), 16));
+function hexToRgb(hex: string): number[] {
+  return [1, 3, 5].map((start) => Number.parseInt(hex.slice(start, start + 2), 16));
+}
+
+/** Translucent swatches sit on a light checkerboard, so judge contrast against the blend. */
+function readableInk(filament: Filament): "#171816" | "#ffffff" {
+  const alpha = filament.opacity ?? 1;
+  const rgb = hexToRgb(filament.hex).map((channel) => channel * alpha + 240 * (1 - alpha));
   const luminance = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
   return luminance > 0.58 ? "#171816" : "#ffffff";
+}
+
+function swatchStyle(filament: Filament): string {
+  if (filament.opacity === undefined) return `--swatch:${filament.hex}`;
+  return `--swatch:rgb(${hexToRgb(filament.hex).join(" ")} / ${filament.opacity})`;
+}
+
+function swatchClass(filament: Filament): string {
+  return filament.opacity === undefined ? "" : " is-translucent";
+}
+
+function lineName(filament: Filament): string {
+  return `${filament.material} ${filament.type}`;
 }
 
 function filamentById(id: string): Filament | undefined {
@@ -142,7 +209,7 @@ function filamentById(id: string): Filament | undefined {
 function stockLabel(id: string): string {
   if (openedIds.has(id)) return `<span class="stock-label is-opened">Opened</span>`;
   if (!availableIds.has(id)) return `<span class="stock-label is-unavailable">Not on hand</span>`;
-  return "";
+  return `<span class="stock-label is-sealed">Sealed</span>`;
 }
 
 function renderGallery(): void {
@@ -150,15 +217,15 @@ function renderGallery(): void {
   const filtered = catalog.filter((filament) => {
     if (viewMode === "available" && !availableIds.has(filament.id)) return false;
     if (viewMode === "opened" && !openedIds.has(filament.id)) return false;
-    if (typeFilter !== "All" && filament.type !== typeFilter) return false;
-    return !query || `${filament.name} ${filament.type} ${filament.family}`.toLowerCase().includes(query);
+    if (lineFilter !== "All" && lineName(filament) !== lineFilter) return false;
+    return !query || `${filament.name} ${lineName(filament)} ${filament.family}`.toLowerCase().includes(query);
   });
 
   requireElement<HTMLElement>("#result-count").textContent = `${filtered.length} ${filtered.length === 1 ? "color" : "colors"}`;
   requireElement<HTMLElement>("#view-description").textContent = {
     available: "Showing filament currently on hand",
     opened: "Showing spools that are already open",
-    all: `Showing all ${catalog.length} Basic and Matte colors`,
+    all: `Showing all ${catalog.length} colors in the catalog`,
   }[viewMode];
 
   if (filtered.length === 0) {
@@ -176,17 +243,17 @@ function renderGallery(): void {
 
     return `
       <article class="filament-card${isSelected ? " is-selected" : ""}${isAvailable ? "" : " is-unavailable"}">
-        <div class="swatch" style="--swatch:${filament.hex};--swatch-ink:${readableInk(filament.hex)}">
-          <span class="finish-badge">PLA ${escapeHtml(filament.type)}</span>
+        <div class="swatch${swatchClass(filament)}" style="${swatchStyle(filament)};--swatch-ink:${readableInk(filament)}">
+          <span class="finish-badge">${escapeHtml(lineName(filament))}</span>
           ${isSelected ? `<span class="pick-number">Pick ${selectedIndex + 1}</span>` : ""}
-          <span class="hex-code">${filament.hex}</span>
+          ${filament.opacity === 0 ? "" : `<span class="hex-code">${filament.hex}</span>`}
         </div>
         <div class="card-copy">
           <h3>${escapeHtml(filament.name)}</h3>
           <span class="color-id">Bambu color ID ${escapeHtml(filament.colorId)}</span>
           ${stockLabel(filament.id)}
           <button type="button" data-action="toggle-pick" data-id="${escapeHtml(filament.id)}" ${!isAvailable || atLimit ? "disabled" : ""} aria-label="${escapeHtml(buttonLabel)}: ${escapeHtml(filament.name)}">
-            ${buttonLabel}<span aria-hidden="true">${isSelected ? "−" : "+"}</span>
+            ${buttonLabel}<span class="pick-icon${isSelected ? " is-minus" : ""}" aria-hidden="true"></span>
           </button>
         </div>
       </article>`;
@@ -211,8 +278,8 @@ function renderPicks(): void {
         ${selected.map((filament, index) => `
           <li class="pick-item${availableIds.has(filament.id) ? "" : " is-unavailable"}">
             <span class="pick-index">${index + 1}</span>
-            <span class="pick-swatch" style="--swatch:${filament.hex}"></span>
-            <span class="pick-name"><strong>${escapeHtml(filament.name)}</strong><small>PLA ${filament.type}${availableIds.has(filament.id) ? "" : " · Not on hand"}</small></span>
+            <span class="pick-swatch${swatchClass(filament)}" style="${swatchStyle(filament)}"></span>
+            <span class="pick-name"><strong>${escapeHtml(filament.name)}</strong><small>${escapeHtml(lineName(filament))}${availableIds.has(filament.id) ? "" : " · Not on hand"}</small></span>
             <span class="pick-actions">
               <button type="button" data-action="move-up" data-id="${filament.id}" ${index === 0 ? "disabled" : ""} aria-label="Move ${escapeHtml(filament.name)} up">↑</button>
               <button type="button" data-action="move-down" data-id="${filament.id}" ${index === selected.length - 1 ? "disabled" : ""} aria-label="Move ${escapeHtml(filament.name)} down">↓</button>
@@ -227,7 +294,7 @@ function renderPicks(): void {
       </div>`;
   }
 
-  requireElement<HTMLElement>("#mobile-swatches").innerHTML = selected.slice(0, 5).map((filament) => `<i style="--swatch:${filament.hex}"></i>`).join("");
+  requireElement<HTMLElement>("#mobile-swatches").innerHTML = selected.slice(0, 5).map((filament) => `<i class="${swatchClass(filament).trim()}" style="${swatchStyle(filament)}"></i>`).join("");
 }
 
 function renderAll(): void {
@@ -320,6 +387,14 @@ function setPanelOpen(open: boolean): void {
   }
 }
 
+function showLine(line: string): void {
+  const select = requireElement<HTMLSelectElement>("#line-filter");
+  select.value = line;
+  lineFilter = select.value === line ? line : "All";
+  renderGallery();
+  requireElement<HTMLElement>(".result-line").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 function openPicks(): void {
   if (mobileLayout.matches) setPanelOpen(true);
   else picksPanel.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -346,6 +421,7 @@ document.addEventListener("click", (event) => {
     case "share": void copySelectionLink(); break;
     case "open-picks": openPicks(); break;
     case "close-picks": setPanelOpen(false); break;
+    case "show-line": if (button.dataset.line) showLine(button.dataset.line); break;
   }
 });
 
@@ -353,8 +429,8 @@ requireElement<HTMLInputElement>("#search").addEventListener("input", (event) =>
   searchTerm = (event.target as HTMLInputElement).value;
   renderGallery();
 });
-requireElement<HTMLSelectElement>("#type-filter").addEventListener("change", (event) => {
-  typeFilter = (event.target as HTMLSelectElement).value;
+requireElement<HTMLSelectElement>("#line-filter").addEventListener("change", (event) => {
+  lineFilter = (event.target as HTMLSelectElement).value;
   renderGallery();
 });
 document.addEventListener("keydown", (event) => {
@@ -388,6 +464,9 @@ async function loadData(): Promise<void> {
 
     requireElement<HTMLElement>("#available-total").textContent = String(availableIds.size);
     requireElement<HTMLElement>("#opened-total").textContent = String(openedIds.size);
+    const lines = [...new Set(catalog.map(lineName))];
+    requireElement<HTMLElement>("#line-total").textContent = String(lines.length);
+    requireElement<HTMLSelectElement>("#line-filter").insertAdjacentHTML("beforeend", lines.map((line) => `<option>${escapeHtml(line)}</option>`).join(""));
     syncUrl();
     renderAll();
     setPanelOpen(false);

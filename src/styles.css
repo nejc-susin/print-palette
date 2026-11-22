@@ -256,6 +256,106 @@ a:focus-visible {
   background: var(--ink);
 }
 
+.material-guide {
+  margin-top: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 1.15rem;
+  background: rgba(251, 250, 246, 0.75);
+}
+
+.material-guide summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1rem;
+  color: var(--ink);
+  font-size: 0.86rem;
+  font-weight: 750;
+  cursor: pointer;
+  list-style: none;
+}
+
+.material-guide summary::-webkit-details-marker {
+  display: none;
+}
+
+.material-guide summary::before {
+  content: "";
+  width: 0.45rem;
+  height: 0.45rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 150ms ease;
+}
+
+.material-guide[open] summary::before {
+  transform: rotate(45deg);
+}
+
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+  padding: 0 1rem;
+}
+
+.guide-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  background: var(--paper);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.guide-card h3 {
+  margin: 0;
+  font-size: 1rem;
+  letter-spacing: -0.02em;
+}
+
+.guide-card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.guide-card strong,
+.guide-card .guide-tagline {
+  color: var(--ink);
+}
+
+.guide-card .guide-tagline {
+  font-weight: 700;
+}
+
+.guide-card .guide-watch {
+  font-size: 0.76rem;
+}
+
+.guide-card button {
+  margin-top: auto;
+  align-self: start;
+  border: 1px solid #cfc9bc;
+  border-radius: 999px;
+  padding: 0.4rem 0.75rem;
+  color: var(--ink);
+  background: var(--cream);
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.guide-footnote {
+  margin: 0;
+  padding: 0.8rem 1rem 1rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
 .result-line {
   display: flex;
   justify-content: space-between;
@@ -307,6 +407,15 @@ a:focus-visible {
   background: var(--swatch);
 }
 
+/* Translucent filament: the tint sits over a light checkerboard so see-through reads at a glance. */
+.swatch.is-translucent,
+.pick-swatch.is-translucent,
+.mobile-swatches i.is-translucent {
+  background:
+    linear-gradient(var(--swatch), var(--swatch)),
+    conic-gradient(#d9d6cf 25%, #f4f2ec 0 50%, #d9d6cf 0 75%, #f4f2ec 0) 0 0 / 16px 16px;
+}
+
 .finish-badge,
 .pick-number {
   position: absolute;
@@ -328,9 +437,10 @@ a:focus-visible {
   font-size: 0.74rem;
 }
 
+/* Bottom-left, opposite the hex code, so long badges like "PETG Translucent" never collide with it. */
 .pick-number {
-  top: 0.75rem;
-  right: 0.75rem;
+  bottom: 0.75rem;
+  left: 0.75rem;
 }
 
 .hex-code {
@@ -409,6 +519,17 @@ a:focus-visible {
   background: #e3f2e7;
 }
 
+.stock-label.is-sealed {
+  border-color: #cfc9bc;
+  color: #4c4d46;
+  background: var(--cream);
+}
+
+.stock-label.is-sealed::before {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px currentColor;
+}
+
 
 
 .card-copy button {
@@ -427,14 +548,34 @@ a:focus-visible {
 }
 
 .card-copy button span {
-  display: grid;
-  place-items: center;
+  position: relative;
+  flex: none;
   width: 1.75rem;
   height: 1.75rem;
   border-radius: 50%;
   color: var(--paper);
   background: var(--ink);
-  font-size: 1.05rem;
+}
+
+.pick-icon::before,
+.pick-icon::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.7rem;
+  height: 2px;
+  border-radius: 1px;
+  background: currentColor;
+  transform: translate(-50%, -50%);
+}
+
+.pick-icon::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.pick-icon.is-minus::after {
+  display: none;
 }
 
 .card-copy button:disabled {
