@@ -6,8 +6,8 @@ Print Palette is a small static site where friends can browse available Bambu La
 
 - Bambu Lab PLA Basic and PLA Matte catalog
 - On-hand, opened-only, and full-catalog views
-- Opened/sealed marker on every on-hand color
-- Search, finish, and color-family filters
+- Opened marker on colors with an opened spool
+- Search and finish filters
 - Reorderable color selection
 - Short, database-free share links using Bambu color IDs
 - Responsive mobile and desktop layout

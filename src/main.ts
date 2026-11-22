@@ -35,7 +35,6 @@ let urlTokenToId = new Map<string, string>();
 let idToUrlToken = new Map<string, string>();
 let viewMode: ViewMode = "available";
 let typeFilter = "All";
-let familyFilter = "All";
 let searchTerm = "";
 let panelOpen = false;
 let toastTimer = 0;
@@ -68,19 +67,14 @@ app.innerHTML = `
     </header>
 
     <main class="content-layout">
-      <section class="catalog-section" aria-labelledby="browse-title">
-        <div class="section-heading">
-          <div><p class="section-kicker">The filament shelf</p><h2 id="browse-title">Find your color</h2></div>
-          <p>Screen colors are approximate, but they’re perfect for narrowing down a favorite.</p>
-        </div>
-
+      <section class="catalog-section" aria-label="Filament colors">
         <div class="toolbar" aria-label="Filament filters">
           <label class="search-field">
             <span>Search colors</span>
             <input id="search" type="search" placeholder="Try “blue” or “green”" autocomplete="off" />
           </label>
           <div class="filter-group">
-            <span class="filter-label">Show</span>
+            <span class="filter-label">Filter</span>
             <div class="segmented-control">
               <button type="button" data-view="available" aria-pressed="true">On hand</button>
               <button type="button" data-view="opened" aria-pressed="false">Opened</button>
@@ -88,10 +82,7 @@ app.innerHTML = `
             </div>
           </div>
           <label class="select-field"><span>Finish</span><select id="type-filter"><option>All</option><option>Basic</option><option>Matte</option></select></label>
-          <label class="select-field"><span>Color family</span><select id="family-filter"><option>All</option></select></label>
         </div>
-
-        <p class="spool-note"><strong>Opened or sealed?</strong> Both are fine to pick. For small prints under about 100&nbsp;g, an opened spool is ideal. For bigger prints, I’m happy to open a new color.</p>
 
         <div class="result-line" aria-live="polite">
           <strong id="result-count">Loading colors…</strong>
@@ -105,12 +96,10 @@ app.innerHTML = `
           <div><p class="section-kicker">Your color shortlist</p><h2 id="picks-title">My Picks <span data-pick-count>0 / ${MAX_PICKS}</span></h2></div>
           <button class="close-panel" type="button" data-action="close-picks" aria-label="Close My Picks">×</button>
         </div>
-        <p class="picks-explainer">Reorder them if you like—the order is kept in the link, but it doesn’t rank your choices.</p>
         <div id="picks-content"></div>
       </aside>
     </main>
 
-    <footer><strong>Print Palette</strong><span>No checkout, no reservation—just a clearer way to choose a color.</span></footer>
   </div>
 
   <button class="panel-backdrop" type="button" data-action="close-picks" aria-label="Close My Picks" hidden></button>
@@ -150,10 +139,10 @@ function filamentById(id: string): Filament | undefined {
   return catalog.find((filament) => filament.id === id);
 }
 
-function stockStatus(id: string): { key: "opened" | "sealed" | "unavailable"; label: string } {
-  if (openedIds.has(id)) return { key: "opened", label: "Opened" };
-  if (availableIds.has(id)) return { key: "sealed", label: "Sealed" };
-  return { key: "unavailable", label: "Not on hand" };
+function stockLabel(id: string): string {
+  if (openedIds.has(id)) return `<span class="stock-label is-opened">Opened</span>`;
+  if (!availableIds.has(id)) return `<span class="stock-label is-unavailable">Not on hand</span>`;
+  return "";
 }
 
 function renderGallery(): void {
@@ -162,7 +151,6 @@ function renderGallery(): void {
     if (viewMode === "available" && !availableIds.has(filament.id)) return false;
     if (viewMode === "opened" && !openedIds.has(filament.id)) return false;
     if (typeFilter !== "All" && filament.type !== typeFilter) return false;
-    if (familyFilter !== "All" && filament.family !== familyFilter) return false;
     return !query || `${filament.name} ${filament.type} ${filament.family}`.toLowerCase().includes(query);
   });
 
@@ -181,7 +169,6 @@ function renderGallery(): void {
 
   gallery.innerHTML = filtered.map((filament) => {
     const isAvailable = availableIds.has(filament.id);
-    const stock = stockStatus(filament.id);
     const selectedIndex = selectedIds.indexOf(filament.id);
     const isSelected = selectedIndex >= 0;
     const atLimit = selectedIds.length >= MAX_PICKS && !isSelected;
@@ -197,7 +184,7 @@ function renderGallery(): void {
         <div class="card-copy">
           <h3>${escapeHtml(filament.name)}</h3>
           <span class="color-id">Bambu color ID ${escapeHtml(filament.colorId)}</span>
-          <span class="stock-label is-${stock.key}">${stock.label}</span>
+          ${stockLabel(filament.id)}
           <button type="button" data-action="toggle-pick" data-id="${escapeHtml(filament.id)}" ${!isAvailable || atLimit ? "disabled" : ""} aria-label="${escapeHtml(buttonLabel)}: ${escapeHtml(filament.name)}">
             ${buttonLabel}<span aria-hidden="true">${isSelected ? "−" : "+"}</span>
           </button>
@@ -225,7 +212,7 @@ function renderPicks(): void {
           <li class="pick-item${availableIds.has(filament.id) ? "" : " is-unavailable"}">
             <span class="pick-index">${index + 1}</span>
             <span class="pick-swatch" style="--swatch:${filament.hex}"></span>
-            <span class="pick-name"><strong>${escapeHtml(filament.name)}</strong><small>PLA ${filament.type} · ${stockStatus(filament.id).label}</small></span>
+            <span class="pick-name"><strong>${escapeHtml(filament.name)}</strong><small>PLA ${filament.type}${availableIds.has(filament.id) ? "" : " · Not on hand"}</small></span>
             <span class="pick-actions">
               <button type="button" data-action="move-up" data-id="${filament.id}" ${index === 0 ? "disabled" : ""} aria-label="Move ${escapeHtml(filament.name)} up">↑</button>
               <button type="button" data-action="move-down" data-id="${filament.id}" ${index === selected.length - 1 ? "disabled" : ""} aria-label="Move ${escapeHtml(filament.name)} down">↓</button>
@@ -233,6 +220,7 @@ function renderPicks(): void {
             </span>
           </li>`).join("")}
       </ol>
+      <p class="spool-tip">Opened spools are ideal for prints under about 100&nbsp;g. For bigger prints, I’m happy to open a new color.</p>
       <div class="picks-footer">
         <button class="share-button" type="button" data-action="share">Copy selection link <span aria-hidden="true">↗</span></button>
         <button class="clear-button" type="button" data-action="clear">Clear all</button>
@@ -369,10 +357,6 @@ requireElement<HTMLSelectElement>("#type-filter").addEventListener("change", (ev
   typeFilter = (event.target as HTMLSelectElement).value;
   renderGallery();
 });
-requireElement<HTMLSelectElement>("#family-filter").addEventListener("change", (event) => {
-  familyFilter = (event.target as HTMLSelectElement).value;
-  renderGallery();
-});
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && panelOpen) setPanelOpen(false);
 });
@@ -404,8 +388,6 @@ async function loadData(): Promise<void> {
 
     requireElement<HTMLElement>("#available-total").textContent = String(availableIds.size);
     requireElement<HTMLElement>("#opened-total").textContent = String(openedIds.size);
-    const families = [...new Set(catalog.map((filament) => filament.family))];
-    requireElement<HTMLSelectElement>("#family-filter").insertAdjacentHTML("beforeend", families.map((family) => `<option>${escapeHtml(family)}</option>`).join(""));
     syncUrl();
     renderAll();
     setPanelOpen(false);

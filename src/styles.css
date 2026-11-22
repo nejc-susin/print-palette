@@ -185,15 +185,6 @@ a:focus-visible {
   padding: clamp(3.5rem, 6vw, 6rem) clamp(1.1rem, 4vw, 4.5rem);
 }
 
-.section-heading {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 2rem;
-  margin-bottom: 2rem;
-}
-
-.section-heading h2,
 .picks-header h2 {
   margin: 0;
   font-size: clamp(2rem, 4vw, 3.6rem);
@@ -201,16 +192,9 @@ a:focus-visible {
   letter-spacing: -0.055em;
 }
 
-.section-heading > p {
-  max-width: 390px;
-  margin: 0;
-  color: var(--muted);
-  line-height: 1.55;
-}
-
 .toolbar {
   display: grid;
-  grid-template-columns: minmax(220px, 1.3fr) auto minmax(130px, 0.55fr) minmax(150px, 0.65fr);
+  grid-template-columns: minmax(220px, 1.3fr) auto minmax(130px, 0.55fr);
   gap: 0.75rem;
   padding: 1rem;
   border: 1px solid var(--line);
@@ -272,21 +256,6 @@ a:focus-visible {
   background: var(--ink);
 }
 
-.spool-note {
-  margin: 0.75rem 0 0;
-  padding: 0.7rem 1rem;
-  border-left: 3px solid var(--green);
-  border-radius: 0.4rem;
-  color: var(--muted);
-  background: rgba(227, 242, 231, 0.55);
-  font-size: 0.86rem;
-  line-height: 1.5;
-}
-
-.spool-note strong {
-  color: var(--ink);
-}
-
 .result-line {
   display: flex;
   justify-content: space-between;
@@ -307,6 +276,8 @@ a:focus-visible {
 }
 
 .filament-card {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   overflow: hidden;
   border: 1px solid var(--line);
@@ -371,6 +342,9 @@ a:focus-visible {
 }
 
 .card-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
   padding: 1rem;
 }
 
@@ -435,18 +409,10 @@ a:focus-visible {
   background: #e3f2e7;
 }
 
-.stock-label.is-sealed {
-  border-color: #cfc9bc;
-  color: #4c4d46;
-  background: var(--cream);
-}
 
-.stock-label.is-sealed::before {
-  background: transparent;
-  box-shadow: inset 0 0 0 1.5px currentColor;
-}
 
 .card-copy button {
+  margin-top: auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -494,6 +460,7 @@ a:focus-visible {
   align-items: start;
   justify-content: space-between;
   gap: 1rem;
+  margin-bottom: 1.1rem;
 }
 
 .picks-header h2 {
@@ -508,11 +475,11 @@ a:focus-visible {
   letter-spacing: 0;
 }
 
-.picks-explainer {
-  margin: 0.8rem 0 1.1rem;
+.spool-tip {
+  margin: 0.9rem 0 0;
   color: var(--muted);
-  font-size: 0.82rem;
-  line-height: 1.5;
+  font-size: 0.76rem;
+  line-height: 1.45;
 }
 
 .close-panel {
@@ -691,21 +658,6 @@ a:focus-visible {
   font-size: 1.15rem;
 }
 
-footer {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  margin: 0 clamp(1.1rem, 4vw, 4.5rem);
-  padding: 1.5rem 0 2.5rem;
-  border-top: 1px solid var(--line);
-  color: var(--muted);
-  font-size: 0.8rem;
-}
-
-footer strong {
-  color: var(--ink);
-}
-
 .mobile-picks-bar,
 .panel-backdrop {
   display: none;
@@ -736,16 +688,11 @@ footer strong {
 
 @media (max-width: 1180px) {
   .toolbar {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: auto minmax(130px, 1fr);
   }
 
-  .search-field,
-  .filter-group {
+  .search-field {
     grid-column: 1 / -1;
-  }
-
-  .segmented-control button {
-    flex: 1;
   }
 }
 
@@ -876,19 +823,12 @@ footer strong {
     font-size: clamp(3rem, 16vw, 5.4rem);
   }
 
-  .section-heading {
-    display: block;
-  }
-
-  .section-heading > p {
-    margin-top: 1rem;
-  }
-
   .toolbar {
     grid-template-columns: 1fr;
   }
 
   .segmented-control button {
+    flex: 1;
     padding-inline: 0.5rem;
   }
 
@@ -924,10 +864,6 @@ footer strong {
   .card-copy button {
     gap: 0.25rem;
     font-size: 0.68rem;
-  }
-
-  footer {
-    flex-direction: column;
   }
 }
 

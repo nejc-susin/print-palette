@@ -11,7 +11,7 @@ Static filament picker. Friends choose up to eight colors and share the ordered 
 - My Picks is a flat, reorderable list of up to eight unique colors.
 - Shared links use `#v=1&p=10100,10200`; order is preserved.
 - Ignore malformed, duplicate, and unknown IDs safely. No pre-release link compatibility is required.
-- Each on-hand card shows whether that color is opened or sealed, and the Show filter has an opened-only view. A short note says both are fine to pick, with opened spools preferred for prints under about 100 g.
+- Opened colors carry an Opened pill; sealed colors have no pill. The Filter control has an opened-only view. My Picks shows a short tip that opened spools are ideal for prints under about 100 g.
 - Public data exposes only binary availability and binary opened state per color—never quantity, price, or purchase data.
 
 ## Data
